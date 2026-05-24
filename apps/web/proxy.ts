@@ -6,7 +6,7 @@ import { buildAllSecurityHeaders, isDevelopmentCsp } from '@/lib/csp';
  * Apply CSP + security headers per request so dev reliably gets unsafe-eval (webpack HMR).
  * Production also sets the same headers via next.config `headers()` for static assets.
  */
-export function middleware(_request: NextRequest) {
+export function proxy(_request: NextRequest) {
   const response = NextResponse.next();
   const isDev = isDevelopmentCsp();
   for (const { key, value } of buildAllSecurityHeaders(isDev)) {
