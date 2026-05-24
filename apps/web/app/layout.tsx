@@ -34,11 +34,8 @@ export const metadata: Metadata = {
     title: SEO_SITE_NAME,
   },
   icons: {
-    icon: [{ url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' }],
-    shortcut: ['/icons/favicon-32.png'],
-    apple: [
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: SEO_OPEN_GRAPH_DEFAULTS,
   twitter: SEO_TWITTER_DEFAULTS,
