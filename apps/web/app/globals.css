@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* Tailwind v4: explicit scan roots (app router + shared components). Fixes missed utilities when auto-detection is wrong in monorepo/dev. */
+@source "./**/*.{js,ts,jsx,tsx,mdx}";
+@source "../components/**/*.{js,ts,jsx,tsx,mdx}";
+
+:root {
+  --background: #07030d;
+  --foreground: #ededed;
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-mono:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+body {
+  background: #07030d;
+  color: #ededed;
+  font-family: var(--font-sans);
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+}
+
+/*
+ * Avoid overflow-x-hidden on body — iOS Safari can break hit-testing / fixed layers.
+ * Clip horizontal overflow at the root instead.
+ */
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  background-color: #07030d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Consistent keyboard focus — luxury purple ring */
+:focus-visible {
+  outline: 2px solid rgba(216, 180, 254, 0.9);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Primary controls: reduce double-tap zoom delay on mobile (use with pointer-events audit) */
+button:not(:disabled),
+a[href],
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled),
+input:not([disabled]),
+select:not([disabled]),
+textarea:not([disabled]) {
+  touch-action: manipulation;
+}
+
+button:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+/* iOS Safari: elements without pointer cursor can require a second tap for click */
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Selection color */
+::selection {
+  background: #a855f7;
+  color: #000;
+}
+
+/* Floating animation */
+@keyframes bunnyFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-18px); }
+  100% { transform: translateY(0px); }
+}
+
+.bunny-float {
+  animation: bunnyFloat 2s ease-in-out infinite;
+}
+
+/* Premium skeleton shimmer — dark purple, not generic gray */
+@keyframes bwSkeletonShimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.bw-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #07030d 0%, #12081f 45%, #0a0514 100%);
+}
+
+.bw-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(88, 28, 135, 0.12) 40%,
+    rgba(168, 85, 247, 0.22) 50%,
+    rgba(216, 180, 254, 0.12) 60%,
+    transparent 100%
+  );
+  animation: bwSkeletonShimmer 1.85s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bw-skeleton::after {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
+/* Content reveal after skeleton → data */
+@keyframes bwContentReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bw-content-reveal {
+  animation: bwContentReveal 0.4s ease-out both;
+}
+
+/* Subtle stagger for skeleton grids (opacity only) */
+@keyframes bwSkeletonStagger {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bw-skeleton-stagger {
+  animation: bwSkeletonStagger 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bw-content-reveal,
+  .bw-skeleton-stagger {
+    animation: none;
+  }
+}
+
+/* Site footer — editorial luxury motion (respect prefers-reduced-motion via Tailwind motion-safe) */
+@keyframes bwQrFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.bw-qr-float {
+  animation: bwQrFloat 7s ease-in-out infinite;
+}
+
+.bw-qr-float-delay-1 {
+  animation-delay: 1.2s;
+}
+
+.bw-qr-float-delay-2 {
+  animation-delay: 2.4s;
+}
+
+/* Premium empty states — fade-in + soft glow */
+@keyframes bwEmptyEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bwEmptyGlowPulse {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.06);
+  }
+}
+
+.bw-empty-enter {
+  animation: bwEmptyEnter 0.55s ease-out both;
+}
+
+.bw-empty-glow {
+  animation: bwEmptyGlowPulse 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bunny-float,
+  .bw-qr-float,
+  .bw-qr-float-delay-1,
+  .bw-qr-float-delay-2 {
+    animation: none;
+  }
+
+  .bw-empty-enter {
+    animation: none;
+  }
+
+  .bw-empty-glow {
+    animation: none;
+    opacity: 0.5;
+  }
+}

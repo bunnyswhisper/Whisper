@@ -1,0 +1,9 @@
+-- Coupon discount base (apply in Supabase if create_order_with_inventory still uses subtotal-only).
+--
+-- Bunny's Whisper: no VAT in the coupon base; vat_amount stays 0 until VAT is enabled.
+-- Expected formula (matches API reconcile + validate-coupon):
+--   discount_base = subtotal + delivery_fee
+--   discount_amount = round(discount_base * discount_percent / 100, 2)
+--   total = greatest(0, round(discount_base - discount_amount, 2))
+--
+-- NestJS runs reconcileCouponOrderTotals after create when a coupon is used.
