@@ -147,6 +147,7 @@ Write-CircularFaviconPng -Size 32 -OutPath (Join-Path $dir 'favicon-32.png')
 Write-LogoIcon -Size 32 -OutPath (Join-Path $dir 'icon-32.png') -LogoHeightRatio $normalRatio
 Write-LogoIcon -Size 180 -OutPath (Join-Path $dir 'apple-touch-icon.png') -LogoHeightRatio $normalRatio
 Write-LogoIcon -Size 180 -OutPath (Join-Path $dir 'icon-180.png') -LogoHeightRatio $normalRatio
+Copy-Item (Join-Path $dir 'apple-touch-icon.png') (Join-Path $webRoot 'public\apple-touch-icon.png') -Force
 Write-LogoIcon -Size 192 -OutPath (Join-Path $dir 'icon-192.png') -LogoHeightRatio $normalRatio
 Write-LogoIcon -Size 512 -OutPath (Join-Path $dir 'icon-512.png') -LogoHeightRatio $normalRatio
 Write-LogoIcon -Size 512 -OutPath (Join-Path $dir 'icon-maskable-512.png') -LogoHeightRatio $maskableRatio
