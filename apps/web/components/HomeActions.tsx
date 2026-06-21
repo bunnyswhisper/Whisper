@@ -174,6 +174,9 @@ export default function HomeActions() {
                     <Link href="/admin/analytics" onClick={() => setOpen(false)} className={adminButton}>
                       Analytics
                     </Link>
+                    <Link href="/admin/finance" onClick={() => setOpen(false)} className={adminButton}>
+                      Finance
+                    </Link>
 
                     <Link href="/admin/events-qr" onClick={() => setOpen(false)} className={adminButton}>
                       Events QR
@@ -187,6 +190,9 @@ export default function HomeActions() {
 
                     <Link href="/account/orders" onClick={() => setOpen(false)} className={userButton}>
                       My Orders
+                    </Link>
+                    <Link href="/account/wishlist" onClick={() => setOpen(false)} className={userButton}>
+                      Wishlist
                     </Link>
                   </Fragment>
                 )}

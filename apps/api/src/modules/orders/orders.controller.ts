@@ -4,8 +4,10 @@ import {
   Get,
   Headers,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +18,10 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { ReturnClaimedOrderDto } from './dto/return-claimed-order.dto';
 import { UncancelOrderDto } from './dto/uncancel-order.dto';
+import {
+  AdminListOrdersQueryDto,
+  ListOrdersQueryDto,
+} from './dto/list-orders-query.dto';
 
 @Controller()
 export class OrdersController {
@@ -36,7 +42,7 @@ export class OrdersController {
 
   @Get('customer/orders/:id')
   findMyOrderById(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Headers('authorization') authorization?: string,
   ) {
     if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -48,25 +54,30 @@ export class OrdersController {
   }
 
   @Get('customer/orders')
-  findMyOrders(@Headers('authorization') authorization?: string) {
+  findMyOrders(
+    @Headers('authorization') authorization?: string,
+    @Query() query?: ListOrdersQueryDto,
+  ) {
     if (!authorization || !authorization.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing customer token');
     }
 
     const token = authorization.replace('Bearer ', '');
-    return this.ordersService.findMyOrders(token);
+    return this.ordersService.findMyOrders(token, query);
   }
 
   @Get('admin/orders')
   @UseGuards(AdminGuard)
-  findAllOrders() {
-    return this.ordersService.findAllOrders();
+  @Throttle({ default: { ttl: 60_000, limit: 60 } })
+  findAllOrders(@Query() query?: AdminListOrdersQueryDto) {
+    return this.ordersService.findAllOrders(query);
   }
 
   @Patch('admin/orders/:id/status')
   @UseGuards(AdminGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 40 } })
   updateOrderStatus(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateOrderStatusDto,
   ) {
     return this.ordersService.updateOrderStatus(
@@ -78,8 +89,9 @@ export class OrdersController {
 
   @Patch('admin/orders/:id/return-claimed')
   @UseGuards(AdminGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   returnClaimedOrder(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: ReturnClaimedOrderDto,
   ) {
     return this.ordersService.returnClaimedOrder(id, body.reason);
@@ -87,8 +99,9 @@ export class OrdersController {
 
   @Patch('admin/orders/:id/uncancel')
   @UseGuards(AdminGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   uncancelOrder(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UncancelOrderDto,
     @Headers('authorization') authorization?: string,
   ) {
@@ -101,6 +114,7 @@ export class OrdersController {
 
   @Get('admin/analytics-extra')
   @UseGuards(AdminGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
   getAnalyticsExtra() {
     return this.ordersService.getAnalyticsExtra();
   }

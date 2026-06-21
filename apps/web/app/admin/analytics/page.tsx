@@ -30,6 +30,7 @@ import {
 import { AnalyticsExportPreview } from '@/components/admin/AnalyticsExportPreview';
 import { AnalyticsChartFrame } from '@/components/admin/AnalyticsChartFrame';
 import { AnalyticsExportCharts } from '@/components/admin/AnalyticsExportCharts';
+import { AdminWishlistAnalyticsPanel } from '@/components/admin/AdminWishlistAnalyticsPanel';
 import {
   AreaChart,
   Area,
@@ -155,6 +156,7 @@ const ANALYTICS_SECTIONS = [
   { id: 'products', label: 'Products & Inventory' },
   { id: 'customers', label: 'Customers & Locations' },
   { id: 'event-qr', label: 'Event QR' },
+  { id: 'wishlist', label: 'Wishlist' },
   { id: 'abandoned', label: 'Abandoned Carts' },
 ] as const;
 
@@ -1184,6 +1186,12 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </>
               )}
+            </div>
+          ) : null}
+
+          {activeSection === 'wishlist' ? (
+            <div className="mt-8">
+              <AdminWishlistAnalyticsPanel />
             </div>
           ) : null}
 

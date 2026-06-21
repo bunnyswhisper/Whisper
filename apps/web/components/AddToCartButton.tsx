@@ -184,19 +184,19 @@ export default function AddToCartButton({
   return (
     <div className="mt-8">
       <div role="group" aria-labelledby="add-to-cart-color-heading">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <h2 id="add-to-cart-color-heading" className="font-semibold text-white">
             Choose Color
           </h2>
 
-          {selectedColor && (
-            <p className="text-sm font-semibold capitalize text-purple-300">
+          {selectedColor ? (
+            <p className="truncate text-sm font-semibold capitalize text-purple-300">
               {selectedColor}
             </p>
-          )}
+          ) : null}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-3 pb-10">
+        <div className="mt-2 flex flex-wrap gap-3">
           {colors.map((color) => {
             const variantsForColor = product.product_variants.filter((variant) =>
               colorsMatch(variant.color, color),
@@ -273,16 +273,16 @@ export default function AddToCartButton({
         )}
       </div>
 
-      <div className="mt-6" role="group" aria-labelledby="add-to-cart-size-heading">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-5" role="group" aria-labelledby="add-to-cart-size-heading">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
             <h2 id="add-to-cart-size-heading" className="font-semibold text-white">
               Choose Size
             </h2>
             <InfoPopover label="Size guide">{HELP.sizeGuide}</InfoPopover>
           </div>
 
-          {selectedVariant && (
+          {selectedVariant ? (
             <p
               className={`text-sm font-semibold ${
                 selectedVariant.stock_quantity <= 0
@@ -298,10 +298,10 @@ export default function AddToCartButton({
                   ? `Only ${selectedVariant.stock_quantity} left`
                   : 'In stock'}
             </p>
-          )}
+          ) : null}
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-3">
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-3">
           {sizes.map((size) => {
             const variant = availableVariantsForColor.find(
               (v) => v.size.trim().toUpperCase() === size,

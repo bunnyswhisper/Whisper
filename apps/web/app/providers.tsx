@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import CartScopeSync from '@/components/CartScopeSync';
 import { PwaInstallBanner } from '@/components/pwa/PwaInstallBanner';
+import { WishlistFirstRewardProvider } from '@/components/wishlist/WishlistFirstRewardModal';
+import { WishlistGuestPromptProvider } from '@/components/wishlist/WishlistGuestPromptModal';
 
 function createQueryClient() {
   return new QueryClient({
@@ -23,9 +25,13 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartScopeSync />
-      {children}
-      <PwaInstallBanner />
+      <WishlistGuestPromptProvider>
+        <WishlistFirstRewardProvider>
+          <CartScopeSync />
+          {children}
+          <PwaInstallBanner />
+        </WishlistFirstRewardProvider>
+      </WishlistGuestPromptProvider>
     </QueryClientProvider>
   );
 }

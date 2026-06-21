@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AddToCartButton from '@/components/AddToCartButton';
+import { HeartWishlistButton } from '@/components/wishlist/HeartWishlistButton';
 import Navbar from '@/components/Navbar';
 import { ProductGallery } from '@/components/ProductGallery';
 import TrustChecklist from '@/components/TrustChecklist';
@@ -158,10 +159,18 @@ function ProductDetailContent({ product }: { product: ProductDetail }) {
           />
         </div>
 
-        <div className="pointer-events-auto min-w-0 rounded-3xl border border-purple-900/60 bg-[#0d0716] p-5 shadow-[0_18px_60px_rgba(168,85,247,0.2)] sm:p-6 lg:sticky lg:top-10 lg:p-8">
-          <h1 className="bg-linear-to-r from-white via-purple-200 to-fuchsia-500 bg-clip-text text-4xl font-black leading-tight text-transparent">
-            {product.name}
-          </h1>
+        <div className="pointer-events-auto relative min-w-0 overflow-visible rounded-3xl border border-purple-900/60 bg-[#0d0716] p-5 shadow-[0_18px_60px_rgba(168,85,247,0.2)] sm:p-6 lg:sticky lg:top-10 lg:p-8">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="min-w-0 flex-1 bg-linear-to-r from-white via-purple-200 to-fuchsia-500 bg-clip-text text-3xl font-black leading-tight text-transparent sm:text-4xl">
+              {product.name}
+            </h1>
+            <HeartWishlistButton
+              productId={product.id}
+              redirectPath={`/product/${product.slug}`}
+              variant="detail"
+              className="shrink-0"
+            />
+          </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {discountPercent ? (
@@ -232,8 +241,8 @@ export default function ProductDetailView({ slug }: { slug: string }) {
     queryKey: productQueryKey(slug),
     queryFn: () => fetchProductDetail(slug),
     staleTime: productStaleTimeMs,
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   useEffect(() => {

@@ -346,6 +346,9 @@ export default function Navbar() {
                           <InternalNavLink onClick={() => setOpen(false)} href="/admin/analytics" className={adminMenuLink}>
                             Analytics
                           </InternalNavLink>
+                          <InternalNavLink onClick={() => setOpen(false)} href="/admin/finance" className={adminMenuLink}>
+                            Finance
+                          </InternalNavLink>
                           <InternalNavLink onClick={() => setOpen(false)} href="/admin/reviews" className={adminMenuLink}>
                             Reviews
                           </InternalNavLink>
@@ -357,6 +360,9 @@ export default function Navbar() {
                         <>
                           <InternalNavLink onClick={() => setOpen(false)} href="/account/orders" className={menuLink}>
                             My Orders
+                          </InternalNavLink>
+                          <InternalNavLink onClick={() => setOpen(false)} href="/account/wishlist" className={menuLink}>
+                            Wishlist
                           </InternalNavLink>
                         </>
                       )}

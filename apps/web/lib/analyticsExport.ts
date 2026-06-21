@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { csvLine } from '@/lib/csvExport';
 import {
   getAdminOrderTotal,
   type AdminOrderRow,
@@ -242,16 +243,6 @@ export function formatCurrency(value: number): string {
 
 export function formatPercent(value: number, fractionDigits = 1): string {
   return `${Number(value || 0).toFixed(fractionDigits)}%`;
-}
-
-function csvCell(v: string | number): string {
-  const s = String(v);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-function csvLine(cells: (string | number)[]) {
-  return cells.map(csvCell).join(',');
 }
 
 export type BuildAnalyticsCsvOptions = {

@@ -29,7 +29,7 @@ export class ListPublicReviewsQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  @Max(5000)
+  @Max(500)
   offset?: number;
 
   @IsOptional()
@@ -45,6 +45,13 @@ export class ListAdminReviewsQueryDto extends ListPublicReviewsQueryDto {
   @Min(1)
   @Max(10)
   declare limit?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  declare offset?: number;
 
   @IsOptional()
   @IsIn(['active', 'pending', 'hidden', 'deleted', 'all'])

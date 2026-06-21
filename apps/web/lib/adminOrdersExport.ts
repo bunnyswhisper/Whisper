@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { adminPaymentStatusLabel } from '@/lib/paymentDisplay';
+import { csvLine } from '@/lib/csvExport';
 
 export type AdminOrderExportRow = {
   id: string;
@@ -39,16 +40,6 @@ function reportTitle(monthLabel?: string): string {
     return "Bunny's Whisper Orders Report";
   }
   return `${normalized} Orders Report`;
-}
-
-function csvCell(v: string | number): string {
-  const s = String(v ?? '');
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-function csvLine(cells: (string | number)[]) {
-  return cells.map(csvCell).join(',');
 }
 
 function money(v: number): string {

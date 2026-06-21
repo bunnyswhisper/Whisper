@@ -19,6 +19,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { DebugModule } from './modules/debug/debug.module';
 import { EventQrModule } from './modules/event-qr/event-qr.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { FinanceModule } from './modules/finance/finance.module';
 
 const optionalDebugModule =
   process.env.NODE_ENV === 'production' ? [] : [DebugModule];
@@ -51,6 +53,8 @@ const optionalDebugModule =
     ...optionalDebugModule,
     EventQrModule,
     ReviewsModule,
+    WishlistModule,
+    FinanceModule,
   ],
 
   controllers: [AppController],

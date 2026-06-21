@@ -2,6 +2,7 @@ import {
     ArrayMaxSize,
     ArrayMinSize,
     IsArray,
+    IsEmail,
     IsIn,
     IsInt,
     IsNotEmpty,
@@ -10,6 +11,7 @@ import {
     IsString,
     IsUUID,
     Max,
+    MaxLength,
     Min,
     ValidateNested,
   } from 'class-validator';
@@ -59,34 +61,42 @@ import {
   export class CreateOrderDto {
     @IsString()
     @IsNotEmpty()
+    @MaxLength(80)
     customerName: string;
   
-    @IsString()
     @IsOptional()
+    @IsString()
+    @MaxLength(6)
     countryCode?: string;
   
     @IsString()
     @IsNotEmpty()
+    @MaxLength(30)
     customerPhone: string;
   
     @IsOptional()
-    @IsString()
+    @IsEmail()
+    @MaxLength(254)
     customerEmail?: string;
   
     @IsString()
     @IsNotEmpty()
+    @MaxLength(120)
     city: string;
   
     @IsString()
     @IsNotEmpty()
+    @MaxLength(120)
     area: string;
   
     @IsString()
     @IsNotEmpty()
+    @MaxLength(120)
     street: string;
   
     @IsOptional()
     @IsString()
+    @MaxLength(500)
     notes?: string;
   
     @IsArray()

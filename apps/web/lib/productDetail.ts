@@ -1,5 +1,7 @@
 import { cache } from 'react';
 import { apiUrl } from '@/lib/api';
+import { createInflightDedupe } from '@/lib/inflightDedupe';
+import { productsPublicRevalidateSeconds } from '@/lib/homeProducts';
 
 export type ProductDetail = {
   id: string;
@@ -23,35 +25,53 @@ export type ProductDetail = {
   }[];
 };
 
-/** Stock-sensitive: keep fresh; order success also invalidates via postOrderSuccessSync. */
-export const productStaleTimeMs = 0;
+/** Public product detail — brief client cache; invalidated after confirmed orders. */
+export const productStaleTimeMs = 60_000;
 
 /** Prefix for invalidating all product detail queries after confirmed orders. */
 export const productDetailsQueryKeyPrefix = ['product'] as const;
+
+const dedupeBySlug = new Map<string, ReturnType<typeof createInflightDedupe<ProductDetail | null>>>();
+
+function getProductDetailDedupe(slug: string) {
+  let deduper = dedupeBySlug.get(slug);
+  if (!deduper) {
+    deduper = createInflightDedupe<ProductDetail | null>();
+    dedupeBySlug.set(slug, deduper);
+  }
+  return deduper;
+}
 
 export function productQueryKey(slug: string) {
   return [...productDetailsQueryKeyPrefix, slug] as const;
 }
 
-export async function fetchProductDetail(slug: string): Promise<ProductDetail | null> {
+async function fetchProductDetailInternal(
+  slug: string,
+): Promise<ProductDetail | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(apiUrl(`/products/${slug}`), {
-      cache: 'no-store',
       signal: controller.signal,
+      next: { revalidate: productsPublicRevalidateSeconds },
     });
 
     if (!res.ok) return null;
 
     return res.json();
   } catch {
-    // Network failure, abort, invalid JSON — never throw for SEO/page stability.
     return null;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function fetchProductDetail(
+  slug: string,
+): Promise<ProductDetail | null> {
+  return getProductDetailDedupe(slug)(() => fetchProductDetailInternal(slug));
 }
 
 /** Server/RSC: one fetch per slug per request (metadata + JSON-LD + page). */

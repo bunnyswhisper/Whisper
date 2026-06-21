@@ -32,6 +32,7 @@ type OrderItemInput = {
 
 type CreateOrderInput = {
   customerName: string;
+  countryCode?: string;
   customerPhone: string;
   customerEmail?: string;
   city: string;
@@ -48,6 +49,11 @@ type CreateOrderInput = {
   eventDeviceKey?: string | null;
   /** Hint only; reconcile uses DB campaign percent. */
   eventDiscountPercent?: number | null;
+};
+
+type ListOrdersQuery = {
+  limit?: number;
+  offset?: number;
 };
 
 type OrderStatus =
@@ -151,6 +157,77 @@ export class OrdersService {
     }
 
     return order;
+  }
+
+  private normalizePhoneDigits(phone: string, countryCode?: string): string {
+    return `${countryCode || ''}${phone}`.replace(/\D/g, '');
+  }
+
+  private assertValidCustomerPhone(phone: string, countryCode?: string): void {
+    const digits = this.normalizePhoneDigits(phone, countryCode);
+    if (digits.length < 8 || digits.length > 15) {
+      throw new BadRequestException('Please enter a valid phone number.');
+    }
+    if (/^0+$/.test(digits) || /^(\d)\1{6,}$/.test(digits)) {
+      throw new BadRequestException('Please enter a valid phone number.');
+    }
+  }
+
+  private assertOrderQuantityLimits(items: OrderItemInput[]): void {
+    const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
+    if (totalQty > 50) {
+      throw new BadRequestException('Maximum 50 items per order.');
+    }
+  }
+
+  private async assertCodAbuseLimits(body: CreateOrderInput): Promise<void> {
+    if (body.paymentMethod === 'paymob') return;
+
+    const phoneDigits = this.normalizePhoneDigits(
+      body.customerPhone,
+      body.countryCode,
+    );
+    const email = body.customerEmail?.trim().toLowerCase() || null;
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const supabase = this.supabaseService.getClient();
+
+    const { data: recent, error } = await supabase
+      .from('orders')
+      .select('id, customer_phone, customer_email')
+      .eq('payment_method', 'cash_on_delivery')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      this.logger.warn(
+        `[createOrder] COD abuse check skipped: ${error.message}`,
+      );
+      return;
+    }
+
+    let matchCount = 0;
+    for (const order of recent || []) {
+      const orderDigits = String(order.customer_phone || '').replace(/\D/g, '');
+      const phoneMatch =
+        orderDigits.length >= 8 && orderDigits === phoneDigits;
+      const emailMatch =
+        Boolean(email) &&
+        String(order.customer_email || '').toLowerCase() === email;
+      if (phoneMatch || emailMatch) matchCount++;
+    }
+
+    if (matchCount >= 4) {
+      throw new BadRequestException(
+        'Too many recent orders from this contact. Please try again later or contact support.',
+      );
+    }
+
+    if (matchCount >= 2) {
+      this.logger.warn(
+        `[createOrder] COD repeat contact phone_tail=${phoneDigits.slice(-4)} matches=${matchCount}`,
+      );
+    }
   }
 
   private extractOrderId(data: any) {
@@ -350,6 +427,10 @@ export class OrdersService {
     if (!body.items || body.items.length === 0) {
       throw new BadRequestException('Cart is empty');
     }
+
+    this.assertOrderQuantityLimits(body.items);
+    this.assertValidCustomerPhone(body.customerPhone, body.countryCode);
+    await this.assertCodAbuseLimits(body);
 
     this.assertNoConflictingDiscountFields(body);
 
@@ -776,7 +857,7 @@ export class OrdersService {
     return this.expirePaymobPendingOrderIfNeeded(data);
   }
 
-  async findMyOrders(token: string) {
+  async findMyOrders(token: string, query?: ListOrdersQuery) {
     const supabase = this.supabaseService.getClient();
 
     const {
@@ -789,6 +870,8 @@ export class OrdersService {
     }
 
     const email = user.email?.trim().toLowerCase() ?? '';
+    const limit = Math.min(Math.max(query?.limit ?? 50, 1), 200);
+    const offset = Math.max(query?.offset ?? 0, 0);
 
     const baseQuery = supabase
       .from('orders')
@@ -796,7 +879,8 @@ export class OrdersService {
         *,
         order_items (*)
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     const { data, error } = email
       ? await baseQuery.or(
@@ -823,14 +907,16 @@ export class OrdersService {
     const hiddenIncomplete = (data || []).length - visible.length;
 
     this.logger.log(
-      `[findMyOrders] user=${shortIdForLog(user.id)} email=${maskEmailForLog(email)} raw=${(data || []).length} returned=${visible.length} hiddenIncomplete=${hiddenIncomplete} paymobPendingVisible=${paymobPendingVisible}`,
+      `[findMyOrders] user=${shortIdForLog(user.id)} email=${maskEmailForLog(email)} limit=${limit} offset=${offset} raw=${(data || []).length} returned=${visible.length} hiddenIncomplete=${hiddenIncomplete} paymobPendingVisible=${paymobPendingVisible}`,
     );
 
     return visible;
   }
 
-  async findAllOrders() {
+  async findAllOrders(query?: ListOrdersQuery) {
     const supabase = this.supabaseService.getClient();
+    const limit = Math.min(Math.max(query?.limit ?? 2000, 1), 2000);
+    const offset = Math.max(query?.offset ?? 0, 0);
 
     const { data, error } = await supabase
       .from('orders')
@@ -838,7 +924,8 @@ export class OrdersService {
         *,
         order_items (*)
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw new BadRequestException(error.message);
@@ -846,6 +933,7 @@ export class OrdersService {
 
     return data;
   }
+
   async returnClaimedOrder(orderId: string, reason: string) {
     const supabase = this.supabaseService.getClient();
   

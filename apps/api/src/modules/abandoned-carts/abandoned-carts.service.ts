@@ -4,6 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 import twilio from 'twilio';
 import { SupabaseService } from '../../supabase/supabase.service';
+import {
+  escapeHtmlAttribute,
+  escapeHtmlText,
+} from '../../common/html-escape.util';
 
 type CartItem = {
   productId: string;
@@ -174,8 +178,10 @@ export class AbandonedCartsService {
     coupon: any;
     items: CartItem[];
   }) {
-    const frontendUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const frontendUrl = (
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'
+    ).replace(/\/+$/, '');
+    const safeFrontendUrl = escapeHtmlAttribute(frontendUrl);
 
     const itemCount = Array.isArray(params.items)
       ? params.items.reduce(
@@ -187,13 +193,13 @@ export class AbandonedCartsService {
     const previewItems = (params.items || []).slice(0, 3);
 
     const couponText = params.coupon
-      ? `You still have a ${params.coupon.discount_percent}% OFF reward waiting for you. For your security, coupon codes are only shown after login.`
+      ? `You still have a ${escapeHtmlText(params.coupon.discount_percent)}% OFF reward waiting for you. For your security, coupon codes are only shown after login.`
       : `Your cart is still waiting for you.`;
 
     const expiryText = params.coupon?.expires_at
-      ? `Your reward expires on ${new Date(
-          params.coupon.expires_at,
-        ).toLocaleDateString()}.`
+      ? `Your reward expires on ${escapeHtmlText(
+          new Date(params.coupon.expires_at).toLocaleDateString(),
+        )}.`
       : '';
 
     const headline =
@@ -213,10 +219,10 @@ export class AbandonedCartsService {
                 (item) => `
                   <div style="padding:12px 0; border-top:1px solid #2e1247;">
                     <p style="margin:0; color:#ffffff; font-weight:800; font-size:15px;">
-                      ${item.name}
+                      ${escapeHtmlText(item.name)}
                     </p>
                     <p style="margin:5px 0 0; color:#c4b5fd; font-size:13px;">
-                      ${item.color} / ${item.size} × ${item.quantity}
+                      ${escapeHtmlText(item.color)} / ${escapeHtmlText(item.size)} × ${escapeHtmlText(item.quantity)}
                     </p>
                   </div>
                 `,
@@ -288,14 +294,14 @@ export class AbandonedCartsService {
             </p>
 
             <div style="margin-top:26px; text-align:center;">
-              <a href="${frontendUrl}/points"
+              <a href="${safeFrontendUrl}/points"
                 style="display:inline-block; background:#d8b4fe; color:#000000; text-decoration:none; padding:15px 24px; border-radius:999px; font-weight:900;">
                 View My Rewards
               </a>
 
               <div style="height:14px;"></div>
 
-              <a href="${frontendUrl}/cart"
+              <a href="${safeFrontendUrl}/cart"
                 style="display:inline-block; color:#d8b4fe; text-decoration:none; font-weight:800;">
                 Return To Cart
               </a>

@@ -175,7 +175,7 @@ export class ReviewsService {
 
   private parseListQuery(
     query: ListReviewsQuery,
-    paging: { defaultLimit: number; maxLimit: number },
+    paging: { defaultLimit: number; maxLimit: number; maxOffset: number },
   ): {
     rating?: number;
     product?: string;
@@ -189,7 +189,7 @@ export class ReviewsService {
       product: query.product?.trim() || undefined,
       sort: query.sort === 'oldest' ? 'oldest' : 'newest',
       limit: Math.min(Math.max(query.limit ?? paging.defaultLimit, 1), paging.maxLimit),
-      offset: Math.max(query.offset ?? 0, 0),
+      offset: Math.min(Math.max(query.offset ?? 0, 0), paging.maxOffset),
       search: query.search?.trim() || undefined,
     };
   }
@@ -274,7 +274,7 @@ export class ReviewsService {
     publicOnly: boolean;
     state?: 'active' | 'pending' | 'hidden' | 'deleted' | 'all';
     query: ListReviewsQuery;
-    paging: { defaultLimit: number; maxLimit: number };
+    paging: { defaultLimit: number; maxLimit: number; maxOffset: number };
   }): Promise<{ rows: ReviewDbRow[]; total: number; limit: number; offset: number }> {
     const supabase = this.supabaseService.getClient();
     const parsed = this.parseListQuery(options.query, options.paging);
@@ -415,7 +415,7 @@ export class ReviewsService {
   async listPublicReviews(
     query: ListReviewsQuery,
   ): Promise<PublicReviewsListResponse> {
-    const paging = { defaultLimit: 5, maxLimit: 5 };
+    const paging = { defaultLimit: 5, maxLimit: 5, maxOffset: 500 };
     const { rows, total, limit, offset } = await this.loadReviewsFiltered({
       publicOnly: true,
       query,
@@ -433,7 +433,7 @@ export class ReviewsService {
   async listAdminReviews(
     query: ListAdminReviewsQuery,
   ): Promise<AdminReviewsListResponse> {
-    const paging = { defaultLimit: 10, maxLimit: 10 };
+    const paging = { defaultLimit: 10, maxLimit: 10, maxOffset: 2000 };
     const state = query.state ?? 'active';
     const { rows, total, limit, offset } = await this.loadReviewsFiltered({
       publicOnly: false,

@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ORDER_SUCCESS_SYNCED_EVENT } from '@/lib/postOrderSuccessSync';
 import { ProductImage } from '@/components/images';
+import { HeartWishlistButton } from '@/components/wishlist/HeartWishlistButton';
 import { productImageAlt } from '@/lib/a11y/productImageAlt';
 import { SkeletonProductGrid } from '@/components/skeleton';
 import { getProductCardImageUrl } from '@/lib/productColor';
@@ -41,7 +42,7 @@ function ProductsEmptyState({ onRetry }: { onRetry?: () => void }) {
 function ProductGrid({ products }: { products: HomeProduct[] }) {
   return (
     <div className="grid items-stretch gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
-      {products.map((product) => {
+      {products.map((product, index) => {
         const image = getProductCardImageUrl(product.product_images);
         const sortedImages = [...(product.product_images || [])].sort(
           (a, b) => (a.sort_order ?? 99) - (b.sort_order ?? 99),
@@ -58,34 +59,41 @@ function ProductGrid({ products }: { products: HomeProduct[] }) {
             key={product.id}
             className="group flex h-full flex-col overflow-hidden rounded-3xl border border-purple-950 bg-[#0d0716] shadow-sm transition duration-300 hover:border-purple-300 hover:shadow-[0_18px_50px_rgba(168,85,247,0.38)] sm:hover:-translate-y-2"
           >
-            <Link
-              href={`/product/${product.slug}`}
-              className="relative block overflow-hidden"
-            >
+            <div className="relative overflow-hidden">
+              <div className="absolute right-2 top-2 z-20 sm:right-3 sm:top-3">
+                <HeartWishlistButton
+                  productId={product.id}
+                  redirectPath={`/product/${product.slug}`}
+                  variant="card"
+                />
+              </div>
               {discountPercent ? (
-                <span className="absolute right-3 top-3 z-10 rounded-full border border-red-300/50 bg-red-500/25 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-red-100 shadow-[0_0_25px_rgba(248,113,113,0.35)] backdrop-blur-md sm:right-4 sm:top-4 sm:px-4 sm:py-2 sm:text-xs">
+                <span className="absolute left-3 top-3 z-10 rounded-full border border-red-300/50 bg-red-500/25 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-red-100 shadow-[0_0_25px_rgba(248,113,113,0.35)] backdrop-blur-md sm:left-4 sm:top-4 sm:px-4 sm:py-2 sm:text-xs">
                   {discountPercent}% OFF
                 </span>
               ) : null}
 
-              {image ? (
-                <div className="relative h-72 w-full overflow-hidden sm:h-80">
-                  <ProductImage
-                    src={image}
-                    alt={imageAlt}
-                    variant="catalog"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex h-72 w-full items-center justify-center bg-[#111827] text-gray-400 sm:h-80"
-                  role="img"
-                  aria-label={`No image for ${product.name}`}
-                >
-                  No image
-                </div>
-              )}
-            </Link>
+              <Link href={`/product/${product.slug}`} className="block">
+                {image ? (
+                  <div className="relative h-72 w-full overflow-hidden sm:h-80">
+                    <ProductImage
+                      src={image}
+                      alt={imageAlt}
+                      variant="catalog"
+                      priority={index < 3}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex h-72 w-full items-center justify-center bg-[#111827] text-gray-400 sm:h-80"
+                    role="img"
+                    aria-label={`No image for ${product.name}`}
+                  >
+                    No image
+                  </div>
+                )}
+              </Link>
+            </div>
 
             <div className="flex flex-1 flex-col p-4 sm:p-5">
               <div className="flex-1">
@@ -140,7 +148,8 @@ export default function ProductCatalog() {
     queryFn: fetchHomeProducts,
     staleTime: productsStaleTimeMs,
     placeholderData: keepPreviousData,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   useEffect(() => {

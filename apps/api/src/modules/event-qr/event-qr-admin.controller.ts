@@ -3,12 +3,15 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import AdminGuard from '../orders/orders-admin.guard';
 import { CreateEventCampaignDto } from './dto/create-event-campaign.dto';
+import { SetEventCampaignActiveDto } from './dto/set-active.dto';
 import { EventQrService } from './event-qr.service';
 
 @Controller('admin/event-qr')
@@ -17,11 +20,13 @@ export class EventQrAdminController {
   constructor(private readonly eventQrService: EventQrService) {}
 
   @Get('campaigns')
+  @Throttle({ default: { ttl: 60_000, limit: 60 } })
   listCampaigns() {
     return this.eventQrService.listCampaignsWithStats();
   }
 
   @Post('campaigns')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   createCampaign(@Body() body: CreateEventCampaignDto) {
     return this.eventQrService.createCampaign({
       name: body.name,
@@ -35,9 +40,9 @@ export class EventQrAdminController {
 
   @Patch('campaigns/:id/active')
   setActive(
-    @Param('id') id: string,
-    @Body() body: { active: boolean },
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: SetEventCampaignActiveDto,
   ) {
-    return this.eventQrService.setCampaignActive(id, Boolean(body?.active));
+    return this.eventQrService.setCampaignActive(id, body.active);
   }
 }

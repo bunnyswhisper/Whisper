@@ -1,4 +1,5 @@
 import { apiUrl } from '@/lib/api';
+import { createInflightDedupe } from '@/lib/inflightDedupe';
 
 export type HomeProduct = {
   id: string;
@@ -24,17 +25,21 @@ export type HomeProduct = {
 
 export const productsQueryKey = ['products'] as const;
 
-/** Stock-sensitive: invalidated after confirmed orders via postOrderSuccessSync. */
-export const productsStaleTimeMs = 0;
+/** Public catalog — brief client cache; invalidated after confirmed orders. */
+export const productsStaleTimeMs = 60_000;
 
-export async function fetchHomeProducts(): Promise<HomeProduct[]> {
+export const productsPublicRevalidateSeconds = 60;
+
+const dedupeHomeProductsFetch = createInflightDedupe<HomeProduct[]>();
+
+async function fetchHomeProductsInternal(): Promise<HomeProduct[]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(apiUrl('/products'), {
-      cache: 'no-store',
       signal: controller.signal,
+      next: { revalidate: productsPublicRevalidateSeconds },
     });
 
     clearTimeout(timeout);
@@ -45,6 +50,10 @@ export async function fetchHomeProducts(): Promise<HomeProduct[]> {
     clearTimeout(timeout);
     return [];
   }
+}
+
+export async function fetchHomeProducts(): Promise<HomeProduct[]> {
+  return dedupeHomeProductsFetch(fetchHomeProductsInternal);
 }
 
 export function getHomeProductDiscountPercent(

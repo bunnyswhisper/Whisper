@@ -216,6 +216,13 @@ export async function submitReview(payload: SubmitOrderReviewPayload): Promise<v
   }
 }
 
+const PUBLIC_REVIEWS_CACHE_MS = 30_000;
+
+const publicReviewsCache = new Map<
+  string,
+  { data: PublicReviewsResponse; expiresAt: number }
+>();
+
 export async function fetchPublicReviews(
   params: ListReviewsParams = {},
 ): Promise<PublicReviewsResponse> {
@@ -227,15 +234,27 @@ export async function fetchPublicReviews(
   if (params.offset) qs.set('offset', String(params.offset));
   if (params.search) qs.set('search', params.search);
 
-  const res = await fetch(apiUrl(`/reviews?${qs.toString()}`), {
-    cache: 'no-store',
+  const cacheKey = qs.toString();
+  const cached = publicReviewsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
+  const res = await fetch(apiUrl(`/reviews?${cacheKey}`), {
+    next: { revalidate: 30 },
   });
 
   if (!res.ok) {
     throw new Error('load_failed');
   }
 
-  return res.json() as Promise<PublicReviewsResponse>;
+  const data = (await res.json()) as PublicReviewsResponse;
+  publicReviewsCache.set(cacheKey, {
+    data,
+    expiresAt: Date.now() + PUBLIC_REVIEWS_CACHE_MS,
+  });
+
+  return data;
 }
 
 export async function fetchAdminReviews(

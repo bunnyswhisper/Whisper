@@ -53,7 +53,9 @@ export async function fetchCustomerOrderById(
 export async function fetchCustomerOrders(options?: {
   trackOrderId?: string | null;
 }): Promise<CustomerOrder[]> {
-  const result = await fetchJsonWithBootstrapRetry<CustomerOrder[]>('/customer/orders');
+  const result = await fetchJsonWithBootstrapRetry<CustomerOrder[]>(
+    '/customer/orders?limit=200',
+  );
 
   if (!result.ok) {
     if (result.authRequired) {
